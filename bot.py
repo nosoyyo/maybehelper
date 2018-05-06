@@ -91,10 +91,12 @@ def delete(content):
     if not urls:
         return '仅支持贴链接删除哦😯'
     else:
+        result = []
         for url in urls:
-            username = content.split('/')[-3]
+            username = url.split('/')[-3]
             user = TwitterUser(username)
-            return user.delete(link=content)
+            result.append(user.delete(link=url))
+        return result
 
 
 def publishFB(content):

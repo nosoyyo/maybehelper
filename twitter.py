@@ -62,9 +62,12 @@ class TwitterUser():
                 return '推特切换到测试环境！随意操作🤓'
 
     def twit(self, tweet):
-        self.api.update_status(tweet.tailored)
-        logging.info('与推特服务器通讯中...')
-        return self.conf.preview_url + self.api.me().status.id_str
+        try:
+            self.api.update_status(tweet.tailored)
+            logging.info('与推特服务器通讯中...')
+            return self.conf.preview_url + self.api.me().status.id_str
+        except tweepy.error.TweepError as e:
+            return e.reason
 
     def delete(self, tweet=None, link=None):
         if tweet:
@@ -73,9 +76,13 @@ class TwitterUser():
             id_str = str(link.split('/')[-1])
         else:
             return '😡😡😡没推删啥？？？'
-        logging.info('删除一条推特 {}...'.format(id_str))
-        self.api.destroy_status(id_str)
-        return '{} 删除成功🤡'.format(id_str)
+        logging.debug('删除一条推特 {}...'.format(id_str))
+        try:
+            self.api.destroy_status(id_str)
+            logging.info('成功删除 {}...'.format(id_str))
+            return '{} succesfully deleted.'.format(id_str)
+        except tweepy.error.TweepError as e:
+            return e.reason
 
 
 class Tweet():
