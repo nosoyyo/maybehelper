@@ -1,0 +1,5 @@
+test_text_0 = 'Telegram has recently shut down its highly-publicized Initial Coin Offering (ICO). While reasons are presently unclear, tightening regulations are likely a major cause. Others are claiming Telegram’s already raised the money they once wanted. https://www.bitsonline.com/telegram-cancels-ico/'
+
+test_text_1 = "['https://github.com/codysoyland/surlex0', 'https://github.com/codysoyland/surlex1', 'https://github.com/codysoyland/surlex2', 'https://github.com/codysoyland/surlex3', 'https://github.com/codysoyland/surlex4', 'https://github.com/codysoyland/surlex5', 'https://github.com/codysoyland/surlex6', 'https://github.com/codysoyland/surlex7', 'https://github.com/codysoyland/surlex8', 'https://github.com/codysoyland/surlex9']"
+
+test_text_2 = "['https://github.com/codysoyland/surlex0', 'https://github.com/codysoyland/surlex1', 'https://github.com/codysoyland/surlex2', 'https://github.com/codysoyland/surlex3', 'https://github.com/codysoyland/surlex4']"
