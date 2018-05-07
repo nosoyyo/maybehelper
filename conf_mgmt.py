@@ -1,14 +1,16 @@
-from config import Telegram_Bot_TOKEN, Telegram_DevBot_TOKEN, DevConf, ProdConf
+from config import Telegram_Bot0_TOKEN, Telegram_Bot1_TOKEN, DevConf, ProdConf
 
 
 # telegram
 class botConf():
-    def __init__(self, env):
+    def __init__(self, no):
 
-        if env is 'dev':
-            self.TOKEN = Telegram_DevBot_TOKEN
-        else:
-            self.TOKEN = Telegram_Bot_TOKEN
+        if no is '0':
+            # maybe
+            self.TOKEN = Telegram_Bot0_TOKEN
+        elif no is '1':
+            # btct
+            self.TOKEN = Telegram_Bot1_TOKEN
 
 
 # twitter
