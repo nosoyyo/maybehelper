@@ -179,7 +179,7 @@ class Tweet():
                 # TODO start multi-tweet buildling process here
                 return '😤想发{}字？等多条功能上线再说啦😤'.format(self.washed_chars)
             else:
-                # when length still bigger than 280
+                # when length still over 280
                 if (self.washed_chars - self.raw_urls_chars) + self.shortens_chars > 280:
                     if len(self.shortens) is 1:
                         return '😤除了链接只能发 257 字符(128 汉字)哦😤'
