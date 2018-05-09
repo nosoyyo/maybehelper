@@ -5,14 +5,8 @@ import logging
 import urlmarker
 from math import fmod, floor
 from conf_mgmt import twitterConf
-
-
-class Errors(Exception):
-    pass
-
-
-class TooManyHyperLinks(Errors):
-    msg = '😤最多只让发 5 个链接啦推特！你收敛一点😤'
+from errors import TooManyHyperLinks
+from sortedcontainers import SortedList, SortedDict
 
 
 # init
@@ -63,9 +57,12 @@ class TwitterUser():
 
     def twit(self, tweet):
         try:
-            self.api.update_status(tweet.tailored)
-            logging.info('与推特服务器通讯中...')
-            return self.conf.preview_url + self.api.me().status.id_str
+            if 'tailored' in tweet.__dict__.keys():
+                self.api.update_status(tweet.tailored)
+                logging.info('与推特服务器通讯中...')
+                return self.conf.preview_url + self.api.me().status.id_str
+            else:
+                return '[debug]原文未成功裁剪，一般是超了字数'
         except tweepy.error.TweepError as e:
             return e.reason
 
@@ -107,16 +104,28 @@ class Tweet():
                     logging.info('计算原文中 url 个数和字符数...')
                     self.raw_urls_chars = sum(
                         [len(url) for url in self.raw_urls])
+                    logging.info('原文中{}个 url，共{}个字符'.format(
+                        len(urls), self.raw_urls_chars))
                     logging.info('正在生成短链接...')
                     self.shorten()
+                    logging.info('短链接搞定')
                     self.shortens_chars = sum(
                         [len(url) for url in self.shortens])
                     self.buildOffset()
+
             self.tailor()
 
     @classmethod
     def extractURL(self, text):
         return re.findall(urlmarker.WEB_URL_REGEX, text)
+
+    @classmethod
+    def isURL(self, text):
+        url = self.extractURL(text)
+        if len(url) != 1 or len(set([text] + url)) != 1:
+            return False
+        else:
+            return True
 
     def wash(self):
         '''
@@ -129,7 +138,7 @@ class Tweet():
                 workspace.append(text[i-1])
             elif not text[i].isspace():
                 workspace.append(text[i-1])
-        self.washed = ''.join(workspace)
+        self.washed = ''.join(workspace) + text[-1]
         self.washed_chars = len(self.washed)
 
     def shorten(self):
@@ -142,34 +151,41 @@ class Tweet():
             logging.debug('获取短链...')
             self.shortens = [url['url']
                              for url in middle_tweet.entities['urls']]
-            logging.debug('似乎一切正常，删除中间 tweet...')
+            logging.debug('一切正常，删除中间 tweet...')
             middle_tweet.destroy()
-            logging.debug('中间 tweet 似乎已被删除...')
-        except Exception:
-            print('something wrong with shorten()')
+            logging.debug('中间 tweet 已被删除...')
+        except Exception as e:
+            print('something wrong with shorten(), ' + e)
 
     def divide(self):
-        if fmod(self.washed_chars, 140) != 0:
-            self.n_tweets = floor(self.washed_chars / 140) + 1
+        if fmod(self.washed_chars, 280) != 0:
+            self.n_tweets = floor(self.washed_chars / 280) + 1
         else:
-            self.n_tweets = floor(self.washed_chars / 140)
+            self.n_tweets = floor(self.washed_chars / 280)
 
     def pool(self):
         self.pool = [item for item in self.washed.split(
             ' ') if item is not None]
 
     def buildOffset(self):
-        self.offset = {'0': self.pool[0]}
+        self.offset = SortedDict({0: self.pool[0]})
         for i in range(1, len(self.pool)):
-            self.offset.__setitem__(str(int(sorted([int(key) for key in self.offset.keys()])[
-                                    i-1]) + len(self.pool[i-1])), self.pool[i])
+            self.offset.__setitem__(
+                self.offset.keys()[i-1] + len(self.pool[i-1]) + 1, self.pool[i])
 
     def buildTweets(self):
+        paging = [n*280 for n in range(1, self.n_tweets)]
+        indices = sorted(paging + [int(key) for key in self.offset.keys()])
+        dividers = []
+        for page in paging:
+            divider = indices[indices.index(page)-1]
+            dividers.append(divider)
 
         # TODO:assembling
         tweets = {}
-        for n in range(1, self.n_tweets):
-            tweets[n] = ''
+        for n, m in range(1, self.n_tweets), range(0, len(dividers)):
+            tweets[str(n)] = ' '.join()
+        return tweets
 
     def tailor(self):
         # deal with urls

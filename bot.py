@@ -67,7 +67,7 @@ def twit(content):
     user = TwitterUser()
     try:
         tweet = Tweet(content)
-        logging.info('twitting {} ...'.format(tweet.tailored))
+        logging.info('twitting {} ...'.format(tweet._raw))
         result = user.twit(tweet)
         return result
     except TooManyHyperLinks:
@@ -92,7 +92,7 @@ def main():
     global update_id
     # Telegram Bot Authorization Token
     # 0: maybe 1: btct
-    bot = telegram.Bot(botConf('1').TOKEN)
+    bot = telegram.Bot(botConf('0').TOKEN)
 
     # get the first pending update_id, this is so we can skip over it in case
     # we get an "Unauthorized" exception.
