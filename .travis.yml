@@ -1,0 +1,6 @@
+language: python
+script: true
+
+before_install: sudo pip3 install -r requirements.txt
+install: true
+script: python -m unittest tests.py
