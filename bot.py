@@ -7,6 +7,7 @@ Simple twitter bot.
 # local debugging
 import jfw
 
+import psutil
 import telegram
 from telegram.error import NetworkError, Unauthorized
 from time import sleep
@@ -90,7 +91,12 @@ def delete(content):
 def main():
     """Run the bot."""
     global update_id
-    # Telegram Bot Authorization Token
+
+    # save pid
+    p = psutil.Process()
+    with open('pid', 'w') as pidfile:
+        pidfile.write(p.pid)
+
     # 0: maybe 1: btct
     bot = telegram.Bot(botConf('0').TOKEN)
 
