@@ -102,6 +102,15 @@ class TwitterUser():
             return '{} succesfully deleted.'.format(id_str)
         except tweepy.error.TweepError as e:
             return e.reason
+    
+    def savePhoto(self, bot, photo_file):
+        '''
+            when called by bot.photo, will pass a `dir` with this
+            TwitterUser obj as TwitterUser.dir
+        '''
+        filename = self.dir + photo_file
+        photo_file.download(filename)
+        return filename
 
 
 class Tweet():

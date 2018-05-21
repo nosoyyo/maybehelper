@@ -50,6 +50,7 @@ def stageHub(bot, update, arg='view', content=None):
 
 def clearStaging(bot, update, mode='clear_draft'):
     ruser = RabonaUser(update.effective_user)
+    text = '        '
     if mode == 'clear_draft':
         with open(ruser.dir + 'staging', 'w'):
             pass

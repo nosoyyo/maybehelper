@@ -93,7 +93,9 @@ def twit(bot, update, content):
 
 
 def photo(bot, update, photo):
+    ruser = RabonaUser(update.effective_user)
     user = TwitterUser()
+    user.dir = ruser.dir
     photo_file = bot.get_file(update.message.photo[-1].file_id)
     local_file_name = user.savePhoto(bot, photo_file)
     try:
