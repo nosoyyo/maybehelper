@@ -28,6 +28,7 @@ def stageHub(bot, update, arg='view', content=None):
         with open(ruser.dir + 'staging', 'w'):
             logging.info(
                 'no staging file in {}, just created one.'.format(ruser.dir))
+        staging = ''
     else:
         with open(ruser.dir + 'staging', 'r') as f:
             staging = f.read()
