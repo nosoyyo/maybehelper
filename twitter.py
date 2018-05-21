@@ -1,3 +1,4 @@
+import os
 import re
 import jfw
 import tweepy
@@ -15,7 +16,7 @@ def flatten(x): return [y for l in x for y in flatten(
 
 # init
 logging.basicConfig(
-    filename='log/telebot_twitter.log',
+    filename='log/bot.log',
     level=logging.INFO,
     format='%(asctime)s%(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
 
@@ -61,8 +62,12 @@ class TwitterUser():
 
     def twit(self, tweet):
         try:
-            if isinstance(tweet.tailored, SortedDict):
+            if 'tailored' in tweet.__dict__.keys() and isinstance(tweet.tailored, SortedDict):
                 return self.multiTwit(tweet)
+            elif 'photo_file' in tweet.__dict__.keys():
+                self.api.update_with_media(tweet.photo_file)
+                os.remove(tweet.photo_file)
+                return self.conf.preview_url + self.api.me().status.id_str
             else:
                 self.api.update_status(tweet.tailored)
                 logging.info('与推特服务器通讯中...')
@@ -104,6 +109,8 @@ class Tweet():
         if self.isstatusurl(text):
             self.__dict__ = TwitterUser().api.get_status(
                 text.split('/')[-1]).__dict__
+        elif isinstance(text, str) and os.path.isfile(text):
+            self.photo_file = text
         elif not text:
             print('想好发啥再戳我😡😡😡')
         else:
