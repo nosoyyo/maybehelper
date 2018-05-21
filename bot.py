@@ -7,140 +7,152 @@ Simple twitter bot.
 # local debugging
 import jfw
 
-import telegram
-from telegram.error import NetworkError, Unauthorized
-from time import sleep
+import psutil
 import logging
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (Updater, CommandHandler,
+                          MessageHandler, Filters, CallbackQueryHandler)
 
+from ru import RabonaUser
 from conf_mgmt import botConf
-
+from stagehub import stageHub, clearStaging, start_markup, editing_markup
 from twitter import TwitterUser, Tweet, TooManyHyperLinks
-
 
 # init
 logging.basicConfig(
-    filename='log/telebot.log',
+    filename='log/bot.log',
     level=logging.INFO,
     format='%(asctime)s%(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
 logging.info('session started.')
 
 
-update_id = None
-
-
-# general - welcome, start, help, who
-def send(bot, update, text):
-    bot.send_message(chat_id=update.message.chat_id, text=text)
-
-
 def start(bot, update):
-    lines = """                 🤓欢迎光临🤓\r
-                可用命令：
-                /start 显示本信息&常用命令
-                /help 查看全部命令
-                /who 显示当前登录账号
-
-                🐦🐦🐦twitter🐦🐦🐦
-                /st 切换 twitter 测试/正式环境"
-                /twit <文字内容> 把 <文字内容> 发布到推特，命令后面接一个空格！
-                /del <推特链接1> <推特链接2>... 删除一条或多条推特（❕无确认步骤，谨慎❕）
-            """
-    send(bot, update, lines)
+    ruser = RabonaUser(update.effective_user)
+    lines = ''' Hi {}!
+                这里是 maybehelper v0.4
+                文字、图片，想发啥发啥，想怎么发怎么发😉
+            '''.format(ruser.title)
+    update.effective_user.send_message(lines, reply_markup=start_markup)
 
 
-def help(bot, update):
-    text = "twitter bot. help maybe."
-    send(bot, update, text)
-
-
-def who():
+def whoami(bot, update):
     user = TwitterUser()
     tu, thome = user.conf.username, user.conf.home_url
     report = '''
                 账号：{}
                 测试地址：{}
             '''.format(tu, thome)
-    return report
+    update.message.reply_text(
+        text=report,
+        reply_markup=start_markup,
+    )
 
 
-def twit(content):
+def switch(bot, update):
+    user = TwitterUser()
+    result = user.switch()
+    update.message.reply_text(
+        text=result,
+        reply_markup=start_markup,
+    )
+
+
+def handler(bot, update):
+    text = update.message.text
+    staging = stageHub(bot, update, 'read')
+    if text == '就发这些咯🐦':
+        result = twit(bot, update, staging)
+        update.message.reply_text(result, reply_markup=start_markup)
+    elif text == '开始发推！':
+        update.message.reply_text('随便输入', reply_markup=editing_markup)
+    elif text == "😄算了":
+        start(bot, update)
+    elif text == "看看都弄了些啥👀":
+        stageHub(bot, update, 'view')
+    elif text == '清空草稿😱':
+        clear_staging_kb = [[InlineKeyboardButton(
+            '确定清空❕', callback_data='clear_staging_confirmed'),
+            InlineKeyboardButton(
+            '开玩笑的，算了😝', callback_data='clear_staging_cancelled')]]
+        update.effective_user.send_message(
+            '确定？', reply_markup=InlineKeyboardMarkup(clear_staging_kb))
+
+    else:
+        stageHub(bot, update, 'write', text)
+        update.message.reply_text('收到 ' + text, reply_markup=editing_markup)
+
+
+def twit(bot, update, content):
     user = TwitterUser()
     try:
         tweet = Tweet(content)
         logging.info('twitting {} ...'.format(tweet._raw))
         result = user.twit(tweet)
-        return result
+        logging.info('post success, now clearing staging')
+        if result:
+            clearStaging(bot, update, mode='after_post')
+            return result
     except TooManyHyperLinks:
         return TooManyHyperLinks.msg
 
 
-def delete(content):
-    urls = Tweet.extractURL(content)
-    if not urls:
-        return '仅支持贴链接删除哦😯'
-    else:
-        result = []
-        for url in urls:
-            username = url.split('/')[-3]
-            user = TwitterUser(username)
-            result.append(user.delete(link=url))
+def photo(bot, update, photo):
+    user = TwitterUser()
+    photo_file = bot.get_file(update.message.photo[-1].file_id)
+    local_file_name = user.savePhoto(bot, photo_file)
+    try:
+        tweet = Tweet(local_file_name)
+        logging.info('twitting photo ...')
+        update.message.reply_text('在发了喔😯')
+        result = user.twitPhoto(tweet)
+        update.message.reply_text('发好了喔😯')
         return result
+    except Exception as e:
+        print(e)
+
+
+def error(bot, update, error):
+    """Log Errors caused by Updates."""
+    logging.warning('Update "%s" caused error "%s"', update, error)
 
 
 def main():
-    """Run the bot."""
-    global update_id
-    # Telegram Bot Authorization Token
-    # 0: maybe 1: btct
-    bot = telegram.Bot(botConf('0').TOKEN)
+    # Create the EventHandler and pass it your bot's token.
+    updater = Updater(botConf('btct').TOKEN)
 
-    # get the first pending update_id, this is so we can skip over it in case
-    # we get an "Unauthorized" exception.
-    try:
-        update_id = bot.get_updates()[0].update_id
-    except IndexError:
-        update_id = None
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
 
-    while True:
-        try:
-            handle(bot)
-        except NetworkError:
-            sleep(1)
-        except Unauthorized:
-            # The user has removed or blocked the bot.
-            update_id += 1
+    dp.add_handler(CommandHandler('start', start))
+    dp.add_handler(CommandHandler('当前账号', whoami))
+    dp.add_handler(CommandHandler('查看草稿', stageHub))
+    dp.add_handler(CommandHandler('切换账号', switch))
+    dp.add_handler(CallbackQueryHandler(stageHub))
+    dp.add_handler(CommandHandler('开始发推！', handler))
 
+    dp.add_handler(MessageHandler(Filters.photo,
+                                  photo,
+                                  ))
+    dp.add_handler(MessageHandler(Filters.text,
+                                  handler,
+                                  ))
 
-def handle(bot):
-    """Echo the message the user sent."""
-    global update_id
-    # Request updates after the last update_id
-    for update in bot.get_updates(offset=update_id, timeout=10):
-        update_id = update.update_id + 1
+    # log all errors
+    dp.add_error_handler(error)
 
-        if update.message:  # your bot can receive updates without messages
-            if update.message.text == '/start':
-                start(bot, update)
-            elif update.message.text == '/help':
-                help(bot, update)
-            elif update.message.text == '/who':
-                update.message.reply_text(who())
+    # Start the Bot
+    updater.start_polling()
 
-            elif update.message.text == '/st':
-                user = TwitterUser()
-                result = user.switch()
-                send(bot, update, result)
-
-            elif update.message.text.startswith('/twit'):
-                content = update.message.text[6:]
-                update.message.reply_text(twit(content))
-            elif update.message.text.startswith('/del'):
-                content = update.message.text[5:]
-                update.message.reply_text(delete(content))
-
-            else:
-                update.message.reply_text('你输入了：' + update.message.text)
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
+    updater.idle()
 
 
 if __name__ == '__main__':
+    # supervisoring process by pid
+    p = psutil.Process()
+    with open('pid', 'w') as pidfile:
+        pidfile.write(str(p.pid))
+
     main()

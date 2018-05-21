@@ -5,10 +5,10 @@ from config import Telegram_Bot0_TOKEN, Telegram_Bot1_TOKEN, DevConf, ProdConf
 class botConf():
     def __init__(self, no):
 
-        if no is '0':
+        if no is 'maybe':
             # maybe
             self.TOKEN = Telegram_Bot0_TOKEN
-        elif no is '1':
+        elif no is 'btct':
             # btct
             self.TOKEN = Telegram_Bot1_TOKEN
 
@@ -43,16 +43,3 @@ class twitterConf():
             self.preview_url = self.home_url + '/status/'
         else:
             return 'something wrong with twitterConf initialization.'
-
-
-# facebook
-class fbConf():
-    '''
-        Prod/Dev switch here.
-    '''
-
-    def __init__(self):
-        site = ''
-        home_url = ''
-        username = 'nosoyyo'
-        preview_url = ''
