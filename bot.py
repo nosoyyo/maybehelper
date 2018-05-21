@@ -7,6 +7,7 @@ Simple twitter bot.
 # local debugging
 import jfw
 
+import os
 import psutil
 import logging
 from telegram.ext import (Updater, CommandHandler,
