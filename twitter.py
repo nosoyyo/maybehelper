@@ -62,7 +62,8 @@ class TwitterUser():
 
     def twit(self, tweet):
         try:
-            if 'tailored' in tweet.__dict__.keys() and isinstance(tweet.tailored, SortedDict):
+            if 'tailored' in tweet.__dict__.keys() and\
+                    isinstance(tweet.tailored, SortedDict):
                 return self.multiTwit(tweet)
             elif 'photo_file' in tweet.__dict__.keys():
                 self.api.update_with_media(tweet.photo_file)
@@ -102,14 +103,15 @@ class TwitterUser():
             return '{} succesfully deleted.'.format(id_str)
         except tweepy.error.TweepError as e:
             return e.reason
-    
-    def savePhoto(self, bot, photo_file):
+
+    def savePhoto(self, bot, photo_file_obj):
         '''
             when called by bot.photo, will pass a `dir` with this
             TwitterUser obj as TwitterUser.dir
         '''
-        filename = self.dir + photo_file
-        photo_file.download(filename)
+        suffix = photo_file_obj.file_path.split('.')[-1]
+        filename = self.dir + photo_file_obj.file_id + '.' + suffix
+        photo_file_obj.download(filename)
         return filename
 
 

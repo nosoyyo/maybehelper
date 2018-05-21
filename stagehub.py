@@ -34,6 +34,7 @@ def stageHub(bot, update, arg='view', content=None):
     else:
         with open(ruser.dir + 'staging', 'r') as f:
             staging = f.read()
+
     if arg == 'view':
         if staging:
             update.message.reply_text(staging, reply_markup=editing_markup)
