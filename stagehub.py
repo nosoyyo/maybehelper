@@ -20,7 +20,7 @@ editing_keyboard = [[KeyboardButton('就发这些咯🐦'),
                     [KeyboardButton("😄算了")]]
 editing_markup = ReplyKeyboardMarkup(
     editing_keyboard, one_time_keyboard=True)
-clear_draft_kb = [['确定清空❕', '算了😝']]
+clear_draft_kb = [['确定清空❕', '😄算了']]
 clear_draft_markup = ReplyKeyboardMarkup(clear_draft_kb, ne_time_keyboard=True)
 
 
@@ -45,18 +45,7 @@ def stageHub(bot, update, arg='view', content=None):
         with open(ruser.dir + 'staging', 'a') as f:
             f.write(content + '\n')
     else:
-        query = update.callback_query
-        print(query.data)
-        if query.data == 'clear_staging_confirmed':
-            clearStaging(bot, update)
-        elif query.data == 'clear_staging_cancelled':
-            query.message.delete()
-            update.effective_user.send_message(
-                text='继续编辑😁',
-                reply_markup=start_markup,
-            )
-        else:
-            pass
+        logging.info('unknown case occured in stageHub.')
 
 
 def clearStaging(bot, update, mode='clear_draft'):
