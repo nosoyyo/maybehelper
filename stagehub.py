@@ -20,6 +20,8 @@ editing_keyboard = [[KeyboardButton('就发这些咯🐦'),
                     [KeyboardButton("😄算了")]]
 editing_markup = ReplyKeyboardMarkup(
     editing_keyboard, one_time_keyboard=True)
+clear_draft_kb = [['确定清空❕', '算了😝']]
+clear_draft_markup = ReplyKeyboardMarkup(clear_draft_kb, ne_time_keyboard=True)
 
 
 def stageHub(bot, update, arg='view', content=None):
@@ -65,5 +67,8 @@ def clearStaging(bot, update, mode='clear_draft'):
         text = '草稿已清空嘻嘻'
     elif mode == 'after_post':
         text = '已经发送成功嘻嘻'
+    elif mode == 'need_confirmation':
+        update.message.send_message(
+            '未发布的推特将彻底消失😱\n确定❓', reply_markup=clear_draft_markup)
     update.effective_user.send_message(text=text, reply_markup=start_markup)
     logging.info('staging cleared.')

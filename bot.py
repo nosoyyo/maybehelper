@@ -70,13 +70,9 @@ def handler(bot, update):
     elif text == "看看都弄了些啥👀":
         stageHub(bot, update, 'view')
     elif text == '清空草稿😱':
-        clear_staging_kb = [[InlineKeyboardButton(
-            '确定清空❕', callback_data='clear_staging_confirmed'),
-            InlineKeyboardButton(
-            '开玩笑的，算了😝', callback_data='clear_staging_cancelled')]]
-        update.effective_user.send_message(
-            '确定？', reply_markup=InlineKeyboardMarkup(clear_staging_kb))
-
+        clearStaging(bot, update, mode='need_confirmation')
+    elif text == '确定清空❕':
+        clearStaging(bot, update, mode='clear_draft')
     else:
         stageHub(bot, update, 'write', text)
         update.message.reply_text('收到 ' + text, reply_markup=editing_markup)
