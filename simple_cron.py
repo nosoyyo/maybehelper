@@ -1,8 +1,13 @@
 import os
 import psutil
 
-with open('pid', 'r') as pidfile:
-    pid = pidfile.read()
+
+if 'pid' not in os.listdir():
+    with open('pid', 'w'):
+        pass
+else:
+    with open('pid', 'r') as pidfile:
+        pid = pidfile.read()
 
 p = psutil.Process(pid)
 
