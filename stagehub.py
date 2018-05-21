@@ -50,11 +50,13 @@ def stageHub(bot, update, arg='view', content=None):
 
 def clearStaging(bot, update, mode='clear_draft'):
     ruser = RabonaUser(update.effective_user)
-    with open(ruser.dir + 'staging', 'w'):
-        pass
     if mode == 'clear_draft':
+        with open(ruser.dir + 'staging', 'w'):
+            pass
         text = '草稿已清空嘻嘻'
     elif mode == 'after_post':
+        with open(ruser.dir + 'staging', 'w'):
+            pass
         text = '已经发送成功嘻嘻'
     elif mode == 'need_confirmation':
         update.effective_user.send_message(
