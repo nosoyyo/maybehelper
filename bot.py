@@ -149,6 +149,6 @@ if __name__ == '__main__':
     # supervisoring process by pid
     p = psutil.Process()
     with open('pid', 'w') as pidfile:
-        pidfile.write(str(p.pid))
+        pidfile.write(p.pid)
 
     main()

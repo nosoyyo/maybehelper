@@ -7,7 +7,7 @@ if 'pid' not in os.listdir():
         pass
 else:
     with open('pid', 'r') as pidfile:
-        pid = pidfile.read()
+        pid = int(pidfile.read())
 
 p = psutil.Process(pid)
 
