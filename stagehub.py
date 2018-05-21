@@ -24,13 +24,13 @@ editing_markup = ReplyKeyboardMarkup(
 
 def stageHub(bot, update, arg='view', content=None):
     ruser = RabonaUser(update.effective_user)
-    if 'staging' in os.listdir(ruser.dir):
-        with open(ruser.dir + 'staging', 'r') as f:
-            staging = f.read()
-    else:
+    if 'staging' not in os.listdir(ruser.dir):
         with open(ruser.dir + 'staging', 'w'):
             logging.info(
                 'no staging file in {}, just created one.'.format(ruser.dir))
+    else:
+        with open(ruser.dir + 'staging', 'r') as f:
+            staging = f.read()
     if arg == 'view':
         if staging:
             update.message.reply_text(staging, reply_markup=editing_markup)
