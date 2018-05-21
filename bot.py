@@ -112,6 +112,7 @@ def photo(bot, update):
         update.message.reply_text('在发了喔😯')
         result = user.twit(tweet)
         update.message.reply_text('发好了喔😯')
+        os.remove(local_file_name)
         return result
     except Exception as e:
         print(e)
