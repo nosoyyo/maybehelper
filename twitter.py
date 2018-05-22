@@ -5,9 +5,10 @@ import tweepy
 import logging
 import urlmarker
 from math import fmod, floor
+from datetime import datetime
 from conf_mgmt import twitterConf
-from errors import TooManyHyperLinks
 from sortedcontainers import SortedList, SortedDict
+from errors import TooManyHyperLinks, UnauthorizedUser
 
 
 def flatten(x): return [y for l in x for y in flatten(
@@ -62,15 +63,16 @@ class TwitterUser():
 
     def twit(self, tweet):
         try:
-            if 'tailored' in tweet.__dict__.keys() and isinstance(tweet.tailored, SortedDict):
+            if 'tailored' in tweet.__dict__.keys() and\
+                    isinstance(tweet.tailored, SortedDict):
                 return self.multiTwit(tweet)
             elif 'photo_file' in tweet.__dict__.keys():
                 self.api.update_with_media(tweet.photo_file)
-                os.remove(tweet.photo_file)
+                # os.remove(tweet.photo_file)
                 return self.conf.preview_url + self.api.me().status.id_str
             else:
-                self.api.update_status(tweet.tailored)
                 logging.info('与推特服务器通讯中...')
+                self.api.update_status(tweet.tailored)
                 return self.conf.preview_url + self.api.me().status.id_str
         except tweepy.error.TweepError as e:
             return e.reason
@@ -102,6 +104,16 @@ class TwitterUser():
             return '{} succesfully deleted.'.format(id_str)
         except tweepy.error.TweepError as e:
             return e.reason
+
+    def savePhoto(self, bot, photo_file_obj):
+        '''
+            when called by bot.photo, will pass a `dir` with this
+            TwitterUser obj as TwitterUser.dir
+        '''
+        suffix = photo_file_obj.file_path.split('.')[-1]
+        filename = self.dir + datetime.now().__str__().replace(':', '-') + '.' + suffix
+        photo_file_obj.download(filename)
+        return filename
 
 
 class Tweet():

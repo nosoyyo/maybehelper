@@ -1,5 +1,4 @@
 import os
-import arrow
 import logging
 
 
@@ -16,7 +15,7 @@ def loadUID():
 
 
 uid = loadUID()
-logging.info('{} users loaded.'.format(uid.count(' ')))
+logging.info('{} users loaded.'.format(len(uid)))
 
 
 class RabonaUser():
@@ -38,8 +37,8 @@ class RabonaUser():
         self.last_name = u.last_name
         if self.last_name:
             self.title = self.last_name + '师'
-        elif self.tele_id == '':
-            pass
+        elif self.tele_id == '496991563':
+            self.title = '美羊羊'
         else:
             self.title = self.first_name + '师'
         self.is_new = self.aloha()
@@ -54,5 +53,6 @@ class RabonaUser():
             logging.info('aloha! new user {}'.format(self.tele_id))
             return True
         else:
-            logging.info('aloha! user {} seen again.'.format(self.tele_id))
+            logging.info('aloha! user {}[{}] seen again.'.format(
+                self.title, self.tele_id))
             return False

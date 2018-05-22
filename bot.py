@@ -9,7 +9,6 @@ import jfw
 
 import psutil
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (Updater, CommandHandler,
                           MessageHandler, Filters, CallbackQueryHandler)
 
@@ -58,28 +57,35 @@ def switch(bot, update):
 
 
 def handler(bot, update):
-    text = update.message.text
-    staging = stageHub(bot, update, 'read')
-    if text == '就发这些咯🐦':
-        result = twit(bot, update, staging)
+    if update.message.document:
+        if update.message.document.mime_type.split('/')[0] == 'image':
+            result = photo(bot, update)
+            update.message.reply_text(result, reply_markup=start_markup)
+    elif update.message.photo:
+        result = photo(bot, update)
         update.message.reply_text(result, reply_markup=start_markup)
-    elif text == '开始发推！':
-        update.message.reply_text('随便输入', reply_markup=editing_markup)
-    elif text == "😄算了":
-        start(bot, update)
-    elif text == "看看都弄了些啥👀":
-        stageHub(bot, update, 'view')
-    elif text == '清空草稿😱':
-        clear_staging_kb = [[InlineKeyboardButton(
-            '确定清空❕', callback_data='clear_staging_confirmed'),
-            InlineKeyboardButton(
-            '开玩笑的，算了😝', callback_data='clear_staging_cancelled')]]
-        update.effective_user.send_message(
-            '确定？', reply_markup=InlineKeyboardMarkup(clear_staging_kb))
-
     else:
-        stageHub(bot, update, 'write', text)
-        update.message.reply_text('收到 ' + text, reply_markup=editing_markup)
+        text = update.message.text
+        staging = stageHub(bot, update, 'read')
+
+        if text == '就发这些咯🐦':
+            result = twit(bot, update, staging)
+            update.message.reply_text(result, reply_markup=start_markup)
+        elif text == '开始发推！':
+            update.message.reply_text('随便输入', reply_markup=editing_markup)
+        elif text == "😄算了":
+            start(bot, update)
+        elif text == "看看都弄了些啥👀":
+            stageHub(bot, update, 'view')
+        elif text == '清空草稿😱':
+            clearStaging(bot, update, mode='need_confirmation')
+        elif text == '确定清空❕':
+            clearStaging(bot, update, mode='clear_draft')
+        else:
+            if text:
+                stageHub(bot, update, 'write', text)
+                update.message.reply_text(
+                    '收到 ' + text, reply_markup=editing_markup)
 
 
 def twit(bot, update, content):
@@ -96,15 +102,21 @@ def twit(bot, update, content):
         return TooManyHyperLinks.msg
 
 
-def photo(bot, update, photo):
+def photo(bot, update):
+    ruser = RabonaUser(update.effective_user)
     user = TwitterUser()
-    photo_file = bot.get_file(update.message.photo[-1].file_id)
-    local_file_name = user.savePhoto(bot, photo_file)
+    user.dir = ruser.dir
+    if update.message.document:
+        photo_file_obj = bot.get_file(update.message.document.file_id)
+    else:
+        photo_file_obj = bot.get_file(update.message.photo[-1].file_id)
+    local_file_name = user.savePhoto(bot, photo_file_obj)
     try:
+        update.message.reply_text('嚯，要发图片喔😯')
         tweet = Tweet(local_file_name)
         logging.info('twitting photo ...')
         update.message.reply_text('在发了喔😯')
-        result = user.twitPhoto(tweet)
+        result = user.twit(tweet)
         update.message.reply_text('发好了喔😯')
         return result
     except Exception as e:
@@ -122,21 +134,14 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('当前账号', whoami))
     dp.add_handler(CommandHandler('查看草稿', stageHub))
     dp.add_handler(CommandHandler('切换账号', switch))
     dp.add_handler(CallbackQueryHandler(stageHub))
     dp.add_handler(CommandHandler('开始发推！', handler))
-
-    dp.add_handler(MessageHandler(Filters.photo,
-                                  photo,
-                                  ))
-    dp.add_handler(MessageHandler(Filters.text,
-                                  handler,
-                                  ))
-
+    dp.add_handler(MessageHandler((Filters.text | Filters.photo | Filters.document),
+                                  handler))
     # log all errors
     dp.add_error_handler(error)
 
