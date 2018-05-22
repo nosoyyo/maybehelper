@@ -7,7 +7,6 @@ Simple twitter bot.
 # local debugging
 import jfw
 
-import os
 import psutil
 import logging
 from telegram.ext import (Updater, CommandHandler,
@@ -107,7 +106,10 @@ def photo(bot, update):
     ruser = RabonaUser(update.effective_user)
     user = TwitterUser()
     user.dir = ruser.dir
-    photo_file_obj = bot.get_file(update.message.document.file_id)
+    if update.message.document:
+        photo_file_obj = bot.get_file(update.message.document.file_id)
+    else:
+        photo_file_obj = bot.get_file(update.message.photo[-1].file_id)
     local_file_name = user.savePhoto(bot, photo_file_obj)
     try:
         update.message.reply_text('嚯，要发图片喔😯')
@@ -116,7 +118,6 @@ def photo(bot, update):
         update.message.reply_text('在发了喔😯')
         result = user.twit(tweet)
         update.message.reply_text('发好了喔😯')
-        os.remove(local_file_name)
         return result
     except Exception as e:
         print(e)

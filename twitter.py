@@ -68,7 +68,7 @@ class TwitterUser():
                 return self.multiTwit(tweet)
             elif 'photo_file' in tweet.__dict__.keys():
                 self.api.update_with_media(tweet.photo_file)
-                os.remove(tweet.photo_file)
+                # os.remove(tweet.photo_file)
                 return self.conf.preview_url + self.api.me().status.id_str
             else:
                 logging.info('与推特服务器通讯中...')
