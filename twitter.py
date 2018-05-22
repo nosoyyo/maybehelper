@@ -5,9 +5,10 @@ import tweepy
 import logging
 import urlmarker
 from math import fmod, floor
+from datetime import datetime
 from conf_mgmt import twitterConf
-from errors import TooManyHyperLinks
 from sortedcontainers import SortedList, SortedDict
+from errors import TooManyHyperLinks, UnauthorizedUser
 
 
 def flatten(x): return [y for l in x for y in flatten(
@@ -22,9 +23,13 @@ logging.basicConfig(
 
 
 class TwitterUser():
-    def __init__(self, username=None):
+    def __init__(self, username=None, update=None):
         if username:
             self.conf = self.getConfByName(username)
+        elif update:
+            whitelist = [547562504, 588316326, 496991563]
+            if update.effective_user.id not in whitelist:
+                raise UnauthorizedUser(update.effective_user.id)
         else:
             self.conf = self.current()
         self._auth = tweepy.OAuthHandler(
@@ -70,8 +75,8 @@ class TwitterUser():
                 os.remove(tweet.photo_file)
                 return self.conf.preview_url + self.api.me().status.id_str
             else:
-                self.api.update_status(tweet.tailored)
                 logging.info('与推特服务器通讯中...')
+                self.api.update_status(tweet.tailored)
                 return self.conf.preview_url + self.api.me().status.id_str
         except tweepy.error.TweepError as e:
             return e.reason
@@ -110,7 +115,7 @@ class TwitterUser():
             TwitterUser obj as TwitterUser.dir
         '''
         suffix = photo_file_obj.file_path.split('.')[-1]
-        filename = self.dir + photo_file_obj.file_id + '.' + suffix
+        filename = self.dir + datetime.now().__str__().replace(':', '-') + '.' + suffix
         photo_file_obj.download(filename)
         return filename
 

@@ -36,7 +36,7 @@ def start(bot, update):
 
 
 def whoami(bot, update):
-    user = TwitterUser()
+    user = TwitterUser(update=update)
     tu, thome = user.conf.username, user.conf.home_url
     report = '''
                 账号：{}
@@ -49,7 +49,7 @@ def whoami(bot, update):
 
 
 def switch(bot, update):
-    user = TwitterUser()
+    user = TwitterUser(update=update)
     result = user.switch()
     update.message.reply_text(
         text=result,
@@ -62,6 +62,9 @@ def handler(bot, update):
         if update.message.document.mime_type.split('/')[0] == 'image':
             result = photo(bot, update)
             update.message.reply_text(result, reply_markup=start_markup)
+    elif update.message.photo:
+        result = photo(bot, update)
+        update.message.reply_text(result, reply_markup=start_markup)
     else:
         text = update.message.text
         staging = stageHub(bot, update, 'read')
@@ -80,13 +83,14 @@ def handler(bot, update):
         elif text == '确定清空❕':
             clearStaging(bot, update, mode='clear_draft')
         else:
-            stageHub(bot, update, 'write', text)
-            update.message.reply_text(
-                '收到 ' + text, reply_markup=editing_markup)
+            if text:
+                stageHub(bot, update, 'write', text)
+                update.message.reply_text(
+                    '收到 ' + text, reply_markup=editing_markup)
 
 
 def twit(bot, update, content):
-    user = TwitterUser()
+    user = TwitterUser(update=update)
     try:
         tweet = Tweet(content)
         logging.info('twitting {} ...'.format(tweet._raw))
@@ -100,9 +104,8 @@ def twit(bot, update, content):
 
 
 def photo(bot, update):
-    print('get hooked by a photo!!!')
     ruser = RabonaUser(update.effective_user)
-    user = TwitterUser()
+    user = TwitterUser(update=update)
     user.dir = ruser.dir
     photo_file_obj = bot.get_file(update.message.document.file_id)
     local_file_name = user.savePhoto(bot, photo_file_obj)
