@@ -23,13 +23,9 @@ logging.basicConfig(
 
 
 class TwitterUser():
-    def __init__(self, username=None, update=None):
+    def __init__(self, username=None):
         if username:
             self.conf = self.getConfByName(username)
-        elif update:
-            whitelist = [547562504, 588316326, 496991563]
-            if update.effective_user.id not in whitelist:
-                raise UnauthorizedUser(update.effective_user.id)
         else:
             self.conf = self.current()
         self._auth = tweepy.OAuthHandler(

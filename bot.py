@@ -36,7 +36,7 @@ def start(bot, update):
 
 
 def whoami(bot, update):
-    user = TwitterUser(update=update)
+    user = TwitterUser()
     tu, thome = user.conf.username, user.conf.home_url
     report = '''
                 账号：{}
@@ -49,7 +49,7 @@ def whoami(bot, update):
 
 
 def switch(bot, update):
-    user = TwitterUser(update=update)
+    user = TwitterUser()
     result = user.switch()
     update.message.reply_text(
         text=result,
@@ -90,7 +90,7 @@ def handler(bot, update):
 
 
 def twit(bot, update, content):
-    user = TwitterUser(update=update)
+    user = TwitterUser()
     try:
         tweet = Tweet(content)
         logging.info('twitting {} ...'.format(tweet._raw))
@@ -105,7 +105,7 @@ def twit(bot, update, content):
 
 def photo(bot, update):
     ruser = RabonaUser(update.effective_user)
-    user = TwitterUser(update=update)
+    user = TwitterUser()
     user.dir = ruser.dir
     photo_file_obj = bot.get_file(update.message.document.file_id)
     local_file_name = user.savePhoto(bot, photo_file_obj)
